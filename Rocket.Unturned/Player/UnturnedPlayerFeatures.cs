@@ -49,6 +49,8 @@ namespace Rocket.Unturned.Player
                     Player.Events.OnUpdateWater += e_OnPlayerUpdateWater;
                     Player.Events.OnUpdateFood += e_OnPlayerUpdateFood;
                     Player.Events.OnUpdateVirus += e_OnPlayerUpdateVirus;
+                    Player.Events.OnUpdateBleeding += e_OnPlayerUpdateBleeding;
+                    Player.Events.OnUpdateBroken += e_OnPlayerUpdateBroken;
                 }
                 else
                 {
@@ -56,6 +58,8 @@ namespace Rocket.Unturned.Player
                     Player.Events.OnUpdateWater -= e_OnPlayerUpdateWater;
                     Player.Events.OnUpdateFood -= e_OnPlayerUpdateFood;
                     Player.Events.OnUpdateVirus -= e_OnPlayerUpdateVirus;
+                    Player.Events.OnUpdateBleeding -= e_OnPlayerUpdateBleeding;
+                    Player.Events.OnUpdateBroken -= e_OnPlayerUpdateBroken;
                 }
                 godMode = value;
             }
@@ -96,13 +100,6 @@ namespace Rocket.Unturned.Player
                     Provider.kick(Player.CSteamID, U.Translate("invalid_character_name"));
                 }
             }
-        }
-
-        private static string reverse(string s)
-        {
-            string r = "";
-            for (int i = s.Length; i > 0; i--) r += s[i - 1];
-            return r;
         }
 
         protected override void Load()
@@ -146,6 +143,18 @@ namespace Rocket.Unturned.Player
                 Player.Bleeding = false;
                 Player.Broken = false;
             }
+        }
+
+        private void e_OnPlayerUpdateBleeding(UnturnedPlayer player, bool bleeding)
+        {
+            if (bleeding)
+                player.Bleeding = false;
+        }
+
+        private void e_OnPlayerUpdateBroken(UnturnedPlayer player, bool broken)
+        {
+            if (broken)
+                player.Broken = false;
         }
     }
 }
