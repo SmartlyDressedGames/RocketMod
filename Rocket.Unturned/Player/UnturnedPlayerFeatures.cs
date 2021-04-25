@@ -2,6 +2,7 @@
 using Rocket.Unturned.Events;
 using SDG.Unturned;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace Rocket.Unturned.Player
@@ -9,6 +10,7 @@ namespace Rocket.Unturned.Player
     public sealed class UnturnedPlayerFeatures : UnturnedPlayerComponent
     {
 
+        static MethodInfo onLanded = typeof(PlayerLife).GetMethod("onLanded", BindingFlags.NonPublic | BindingFlags.Instance);
         public DateTime Joined = DateTime.Now;
 
         internal Color? color = null;
@@ -43,19 +45,28 @@ namespace Rocket.Unturned.Player
         {
             set
             {
+                if (value == godMode)
+                    return;
+
+                var e = Player.Events;
+                var landed = (Landed)Delegate.CreateDelegate(typeof(Landed), Player.Player.life, onLanded);
                 if (value)
                 {
-                    Player.Events.OnUpdateHealth += e_OnPlayerUpdateHealth;
-                    Player.Events.OnUpdateWater += e_OnPlayerUpdateWater;
-                    Player.Events.OnUpdateFood += e_OnPlayerUpdateFood;
-                    Player.Events.OnUpdateVirus += e_OnPlayerUpdateVirus;
+                    e.OnUpdateHealth += e_OnPlayerUpdateHealth;
+                    e.OnUpdateWater += e_OnPlayerUpdateWater;
+                    e.OnUpdateFood += e_OnPlayerUpdateFood;
+                    e.OnUpdateVirus += e_OnPlayerUpdateVirus;
+                    Player.Player.life.onHurt += e_OnHurt;
+                    Player.Player.movement.onLanded -= landed;
                 }
                 else
                 {
-                    Player.Events.OnUpdateHealth -= e_OnPlayerUpdateHealth;
-                    Player.Events.OnUpdateWater -= e_OnPlayerUpdateWater;
-                    Player.Events.OnUpdateFood -= e_OnPlayerUpdateFood;
-                    Player.Events.OnUpdateVirus -= e_OnPlayerUpdateVirus;
+                    e.OnUpdateHealth -= e_OnPlayerUpdateHealth;
+                    e.OnUpdateWater -= e_OnPlayerUpdateWater;
+                    e.OnUpdateFood -= e_OnPlayerUpdateFood;
+                    e.OnUpdateVirus -= e_OnPlayerUpdateVirus;
+                    Player.Player.life.onHurt -= e_OnHurt;
+                    Player.Player.movement.onLanded += landed;
                 }
                 godMode = value;
             }
@@ -142,10 +153,13 @@ namespace Rocket.Unturned.Player
         {
             if (health < 95)
             {
-                Player.Heal(100);
-                Player.Bleeding = false;
-                Player.Broken = false;
+                player.Player.life.tellHealth(Provider.server, 100);
             }
+        }
+
+        private void e_OnHurt(SDG.Unturned.Player player, byte damage, Vector3 force, EDeathCause cause, ELimb limb, Steamworks.CSteamID killer)
+        {
+            player.life.askHeal(100, true, true);
         }
     }
 }

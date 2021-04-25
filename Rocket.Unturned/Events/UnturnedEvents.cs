@@ -32,18 +32,29 @@ namespace Rocket.Unturned.Events
                     OnBeforePlayerConnected.TryInvoke(p);
                 }
             };
-            DamageTool.playerDamaged += (SDG.Unturned.Player player, ref EDeathCause cause, ref ELimb limb, ref CSteamID killer, ref Vector3 direction, ref float damage, ref float times, ref bool canDamage) =>
+            
+            DamageTool.damagePlayerRequested += newOnDamage;
+        }
+
+        static void newOnDamage(ref DamagePlayerParameters p, ref bool shouldAllow)
+        {
+            if (p.player)
             {
-                if (OnPlayerDamaged != null)
-                {
-                    if (player != null && killer != CSteamID.Nil && killer != null)
-                    {
-                        UnturnedPlayer getterDamage = UnturnedPlayer.FromPlayer(player);
-                        UnturnedPlayer senderDamage = UnturnedPlayer.FromCSteamID(killer);
-                        OnPlayerDamaged.TryInvoke(getterDamage, cause, limb, senderDamage, direction, damage, times, canDamage);
-                    }
-                }
-            };
+                var f = p.player.GetComponent<UnturnedPlayerFeatures>();
+
+                shouldAllow = !f || !f.GodMode;
+            }
+            onDamage(p.player, ref p.cause, ref p.limb, ref p.killer, ref p.direction, ref p.damage, ref p.times, ref shouldAllow);
+        }
+
+        static void onDamage(SDG.Unturned.Player player, ref EDeathCause cause, ref ELimb limb, ref CSteamID killer, ref Vector3 direction, ref float damage, ref float times, ref bool canDamage)
+        {
+            if (OnPlayerDamaged != null && player != null && killer != CSteamID.Nil && killer != null)
+            {
+                UnturnedPlayer getterDamage = UnturnedPlayer.FromPlayer(player);
+                UnturnedPlayer senderDamage = UnturnedPlayer.FromCSteamID(killer);
+                OnPlayerDamaged.TryInvoke(getterDamage, cause, limb, senderDamage, direction, damage, times, canDamage);
+            }
         }
 
         public delegate void PlayerDisconnected(UnturnedPlayer player);

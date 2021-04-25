@@ -110,9 +110,9 @@ namespace Rocket.Unturned.Chat
             {
                 Core.Logging.Logger.Log(message, ConsoleColor.Gray);
             }
-            else
+            else if (player is UnturnedPlayer uplayer)
             {
-                Say(new CSteamID(ulong.Parse(player.Id)), message, color, rich);
+                Say(uplayer.CSteamID, message, color, rich);
             }
         }
 
